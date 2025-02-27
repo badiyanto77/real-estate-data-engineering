@@ -1,0 +1,2025 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"type": "string",
+			"metadata": "Workspace name",
+			"defaultValue": "synapserealestate"
+		},
+		"synapserealestate-WorkspaceDefaultSqlServer_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'synapserealestate-WorkspaceDefaultSqlServer'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:synapserealestate.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://dlakerealestate.dfs.core.windows.net/"
+		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://vaultrealestate.vault.azure.net/"
+		},
+		"synapserealestate-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://dlakerealestate.dfs.core.windows.net"
+		}
+	},
+	"variables": {
+		"workspaceId": "[concat('Microsoft.Synapse/workspaces/', parameters('workspaceName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('workspaceName'), '/Real Estate Data Pipeline')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Collecting Property Comparison Data",
+						"type": "SynapseNotebook",
+						"dependsOn": [
+							{
+								"activity": "Transforming PropertyOnMarket Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "Collecting Property Comparison",
+								"type": "NotebookReference"
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "RealEstate",
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": "Small",
+							"conf": {
+								"spark.dynamicAllocation.enabled": false,
+								"spark.dynamicAllocation.minExecutors": 2,
+								"spark.dynamicAllocation.maxExecutors": 2
+							},
+							"driverSize": "Small",
+							"numExecutors": 2
+						}
+					},
+					{
+						"name": "Collecting Crime Data",
+						"type": "SynapseNotebook",
+						"dependsOn": [
+							{
+								"activity": "Transforming PropertyOnMarket Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "Collecting Crime Data By ZipCode",
+								"type": "NotebookReference"
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "RealEstate",
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": "Small",
+							"conf": {
+								"spark.dynamicAllocation.enabled": false,
+								"spark.dynamicAllocation.minExecutors": 2,
+								"spark.dynamicAllocation.maxExecutors": 2
+							},
+							"driverSize": "Small",
+							"numExecutors": 2
+						}
+					},
+					{
+						"name": "Collecting Property On Sale",
+						"type": "SynapseNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "Collecting PropertyOnSale Data",
+								"type": "NotebookReference"
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "RealEstate",
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": "Small",
+							"conf": {
+								"spark.dynamicAllocation.enabled": false,
+								"spark.dynamicAllocation.minExecutors": 2,
+								"spark.dynamicAllocation.maxExecutors": 2
+							},
+							"driverSize": "Small",
+							"numExecutors": 2
+						}
+					},
+					{
+						"name": "Transforming PropertyOnMarket Data",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Collecting Property On Sale",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Shared/Transforming PropertyOnMarket Data"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Collecting AirBNB Data",
+						"type": "SynapseNotebook",
+						"dependsOn": [
+							{
+								"activity": "Transforming PropertyOnMarket Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "Collecting AirBNB Data",
+								"type": "NotebookReference"
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "RealEstate",
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": "Small",
+							"conf": {
+								"spark.dynamicAllocation.enabled": false,
+								"spark.dynamicAllocation.minExecutors": 2,
+								"spark.dynamicAllocation.maxExecutors": 2
+							},
+							"driverSize": "Small",
+							"numExecutors": 2
+						}
+					},
+					{
+						"name": "Collecting Rent Estimation Data",
+						"type": "SynapseNotebook",
+						"dependsOn": [
+							{
+								"activity": "Transforming PropertyOnMarket Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "Collecting Rent Estimation Data",
+								"type": "NotebookReference"
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "RealEstate",
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": "Small",
+							"conf": {
+								"spark.dynamicAllocation.enabled": false,
+								"spark.dynamicAllocation.minExecutors": 2,
+								"spark.dynamicAllocation.maxExecutors": 2
+							},
+							"driverSize": "Small",
+							"numExecutors": 2
+						}
+					},
+					{
+						"name": "Execute Transforming Data Pipeline",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Collecting Rent Estimation Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Collecting Crime Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Collecting Property Comparison Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Collecting AirBNB Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Transform Data Pipeline",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-02-27T00:57:24Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/notebooks/Collecting Property Comparison')]",
+				"[concat(variables('workspaceId'), '/bigDataPools/RealEstate')]",
+				"[concat(variables('workspaceId'), '/notebooks/Collecting Crime Data By ZipCode')]",
+				"[concat(variables('workspaceId'), '/notebooks/Collecting PropertyOnSale Data')]",
+				"[concat(variables('workspaceId'), '/linkedServices/AzureDatabricks1')]",
+				"[concat(variables('workspaceId'), '/notebooks/Collecting AirBNB Data')]",
+				"[concat(variables('workspaceId'), '/notebooks/Collecting Rent Estimation Data')]",
+				"[concat(variables('workspaceId'), '/pipelines/Transform Data Pipeline')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Transform Data Pipeline')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Transform Crime Data",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Shared/Transforming Crime Data"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Transforming Rental Estimation Data",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Transform Crime Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Shared/Transforming Rental Estimation Data"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Transforming Property Comp Data",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Transforming AirBNB Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Shared/Transforming Property Comp Data"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Transforming AirBNB Data",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Transforming Rental Estimation Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Shared/Transforming AirBNB Data"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks1",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-02-26T21:12:35Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/AzureDatabricks1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AzureDataLakeStorage1')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AzureDatabricks1')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-4355410154616658.18.azuredatabricks.net",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "AzureKeyVault1",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "synapsedatabricktoken"
+					},
+					"existingClusterId": "0206-222100-fx4uvh6r"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
+				"[concat(variables('workspaceId'), '/linkedServices/AzureKeyVault1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AzureKeyVault1')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('AzureKeyVault1_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/synapserealestate-WorkspaceDefaultSqlServer')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"parameters": {
+					"DBName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('synapserealestate-WorkspaceDefaultSqlServer_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/synapserealestate-WorkspaceDefaultStorage')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('synapserealestate-WorkspaceDefaultStorage_properties_typeProperties_url')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/WorkspaceSystemIdentity')]",
+			"type": "Microsoft.Synapse/workspaces/credentials",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "ManagedIdentity",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Alter AirBNBComp')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- This is auto-generated code\nCREATE OR ALTER VIEW AirBNBComp\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'https://dlakerealestate.dfs.core.windows.net/silver/AirBNBData/AirBNBComp.delta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "RealEstateAnalytic",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Alter AirBNBRevenueEstimate')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- This is auto-generated code\nCREATE OR ALTER VIEW AirBNBRevenueEstimate\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'https://dlakerealestate.dfs.core.windows.net/silver/AirBNBData/AirBNBRevenueEstimate.delta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "RealEstateAnalytic",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Alter CrimeData')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- This is auto-generated code\nCREATE OR ALTER VIEW CrimeData\nAS\nSELECT\n     *\nFROM\n    OPENROWSET(\n        BULK 'https://dlakerealestate.dfs.core.windows.net/silver/CrimeData/CrimeData.delta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "RealEstateAnalytic",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Alter PropertyComps')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- This is auto-generated code\nCREATE OR ALTER VIEW PropertyComps\nAS \nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'https://dlakerealestate.dfs.core.windows.net/silver/PropertyComparison/PropertyComps.delta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "RealEstateAnalytic",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Alter PropertyOnMarket View')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- This is auto-generated code\n\nCREATE OR ALTER VIEW PropertyOnMarket\nAS \nSELECT\n     *\nFROM\n    OPENROWSET(\n        BULK 'https://dlakerealestate.dfs.core.windows.net/silver/PropertyOnMarket/PropertyOnMarket.delta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "RealEstateAnalytic",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Alter View RentalEstimate')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "CREATE OR ALTER VIEW RentalEstimate\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'https://dlakerealestate.dfs.core.windows.net/silver/RentalEstimateData/RentalEstimate.delta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "RealEstateAnalytic",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Alter View RentalEstimateCorp')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "CREATE OR ALTER VIEW RentalEstimateComp\nAS \nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'https://dlakerealestate.dfs.core.windows.net/silver/RentalEstimateData/RentalEstimateComp.delta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "RealEstateAnalytic",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Collecting AirBNB Data')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "RealEstate",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"runAsWorkspaceSystemIdentity": false,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "5bfd14d7-b199-4ce5-b180-c70b0b02f6d7"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"synapse_widget": {
+						"version": "0.1"
+					},
+					"enableDebugMode": false,
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/53a5f707-d87c-4719-a352-95e693ea64db/resourceGroups/resource-group-realestate-project/providers/Microsoft.Synapse/workspaces/synapserealestate/bigDataPools/RealEstate",
+						"name": "RealEstate",
+						"type": "Spark",
+						"endpoint": "https://synapserealestate.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/RealEstate",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net",
+							"authHeader": null
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"extraHeader": null
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Collecting AirBNB Data\n",
+							"The purpose of this code to collect airBNB data from API and store them in Azure Data Lake"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							}
+						},
+						"source": [
+							"import requests\n",
+							"import pandas as pd\n",
+							"import json\n",
+							"import time\n",
+							"import datetime\n",
+							"import os"
+						],
+						"outputs": [],
+						"execution_count": 28
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"def get_data(Address : str,Bath : str, Bed : str):\n",
+							"    url = \"https://airdna1.p.rapidapi.com/rentalizer\"\n",
+							"    \n",
+							"    if len(Bed)>0:\n",
+							"        querystring = {\"address\":Address,\"bedrooms\":Bed,\"bathrooms\":Bath}\n",
+							"    else:\n",
+							"        querystring = {\"address\":Address}\n",
+							"\n",
+							"    headers = {\n",
+							"\t    \"x-rapidapi-key\": \"1bd9f55d72msh06a4a0fa1818ebep126179jsnf1ca25048267\",\n",
+							"\t    \"x-rapidapi-host\": \"airdna1.p.rapidapi.com\"\n",
+							"    }\n",
+							"    response = requests.get(url, headers=headers, params=querystring)\n",
+							"    return response.json()"
+						],
+						"outputs": [],
+						"execution_count": 29
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"from notebookutils import mssparkutils \n",
+							"\n",
+							"mssparkutils.fs.mount( \n",
+							"    \"abfss://silver@dlakerealestate.dfs.core.windows.net\", \n",
+							"    \"/silver\", \n",
+							"    {\"linkedService\": \"AzureDataLakeStorage1\"} \n",
+							") \n",
+							"pathsilver = mssparkutils.fs.getMountPath(\"/silver\")\n",
+							"print(pathsilver)"
+						],
+						"outputs": [],
+						"execution_count": 30
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"mssparkutils.fs.mount(\n",
+							"    \"abfss://bronze@dlakerealestate.dfs.core.windows.net\", \n",
+							"    \"/bronze/AirBNBData/\", \n",
+							"    {\"linkedService\": \"AzureDataLakeStorage1\"} \n",
+							") \n",
+							"pathbronze = mssparkutils.fs.getMountPath(\"/bronze/AirBNBData\")\n",
+							"print(pathbronze)"
+						],
+						"outputs": [],
+						"execution_count": 50
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"directory_path=pathbronze+\"/AirBNBData\"\n",
+							"files = os.listdir(directory_path)\n",
+							"for file in files:\n",
+							"    file_path = os.path.join(directory_path, file)\n",
+							"    # print(file_path)\n",
+							"    if os.path.isfile(file_path):\n",
+							"         os.remove(file_path)"
+						],
+						"outputs": []
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"collapsed": false
+						},
+						"source": [
+							"dfpropertyonmarket = pd.read_parquet(pathsilver+'/PropertyOnMarket/', engine='pyarrow')"
+						],
+						"outputs": [],
+						"execution_count": 31
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"counter =0\n",
+							"for index,row in dfpropertyonmarket.iterrows():\n",
+							"    counter=counter+1\n",
+							"    if(counter>=0):\n",
+							"        completeaddress = row['Address']+\", \"+row[\"City\"]+\", \"+row[\"State\"]+\" \"+row[\"ZipCode\"]\n",
+							"        data = get_data(str(completeaddress),str(row[\"Bathrooms\"]), str(row[\"Bedrooms\"]))\n",
+							"        j=json.dumps(data) \n",
+							"        with open(pathbronze+\"/AirBNBData/airbnb-data-\"+ str(row['ZPID'])+ \".json\",\"w\") as f:\n",
+							"            f.write(j)\n",
+							"            f.close()\n",
+							"        # delay the request to limit 1 per second\n",
+							"        if (counter%1)==0:\n",
+							"            print(counter, \"delay \"+str(datetime.datetime.now()))\n",
+							"            time.sleep(1)"
+						],
+						"outputs": [],
+						"execution_count": 52
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Collecting Crime Data By ZipCode')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "RealEstate",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"runAsWorkspaceSystemIdentity": false,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "f8a91c6e-3440-4df2-8922-0641599621d9"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"synapse_widget": {
+						"version": "0.1"
+					},
+					"enableDebugMode": false,
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/53a5f707-d87c-4719-a352-95e693ea64db/resourceGroups/resource-group-realestate-project/providers/Microsoft.Synapse/workspaces/synapserealestate/bigDataPools/RealEstate",
+						"name": "RealEstate",
+						"type": "Spark",
+						"endpoint": "https://synapserealestate.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/RealEstate",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net",
+							"authHeader": null
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"extraHeader": null
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Collecting Crime Data\n",
+							"The purpose of this code to collect crime data from API and store in JSON format in Azure Datalake"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language_group": "synapse_pyspark"
+							}
+						},
+						"source": [
+							"import requests\n",
+							"import pandas as pd\n",
+							"import json\n",
+							"import time\n",
+							"import datetime\n",
+							"import os\n",
+							""
+						],
+						"outputs": [],
+						"execution_count": 1
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"def get_data(Zipcode : str ):\n",
+							"    \n",
+							"    url = \"https://zylalabs.com/api/3054/us+crime+scores+by+zipcode+api/3231/get+data+by+zip?zip=\"+Zipcode.strip()\n",
+							"    headers = {\n",
+							"        'Authorization': 'Bearer 6097|RMap0soZ9NahfQ2GiroG9683Dgzb6hHhJcd0eBXE'\n",
+							"    }\n",
+							"    response = requests.get(url, headers=headers)\n",
+							"    return response.json()\n",
+							"    \n",
+							""
+						],
+						"outputs": [],
+						"execution_count": 3
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"from notebookutils import mssparkutils \n",
+							"\n",
+							"mssparkutils.fs.mount( \n",
+							"    \"abfss://silver@dlakerealestate.dfs.core.windows.net\", \n",
+							"    \"/silver\", \n",
+							"    {\"linkedService\": \"AzureDataLakeStorage1\"} \n",
+							") \n",
+							"pathsilver = mssparkutils.fs.getMountPath(\"/silver\")\n",
+							"print(pathsilver)\n",
+							""
+						],
+						"outputs": [],
+						"execution_count": 4
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"mssparkutils.fs.mount( \n",
+							"    \"abfss://bronze@dlakerealestate.dfs.core.windows.net\", \n",
+							"    \"/bronze\", \n",
+							"    {\"linkedService\": \"AzureDataLakeStorage1\"} \n",
+							") \n",
+							"pathbronze = mssparkutils.fs.getMountPath(\"/bronze\")\n",
+							""
+						],
+						"outputs": [],
+						"execution_count": 7
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"directory_path=pathbronze+\"/CrimeData\"\n",
+							"files = os.listdir(directory_path)\n",
+							"for file in files:\n",
+							"    file_path = os.path.join(directory_path, file)\n",
+							"    # print(file_path)\n",
+							"    if os.path.isfile(file_path):\n",
+							"         os.remove(file_path)"
+						],
+						"outputs": []
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"collapsed": false
+						},
+						"source": [
+							"\n",
+							"df = pd.read_parquet(pathsilver+'/PropertyOnMarket/', engine='pyarrow')\n",
+							"display(df['ZipCode'].unique())"
+						],
+						"outputs": [],
+						"execution_count": 6
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"\n",
+							"counter=0\n",
+							"for zipcode in df['ZipCode'].unique():\n",
+							"    # iter_index=iter_index+1\n",
+							"    print(str(zipcode))\n",
+							"    counter=counter+1\n",
+							"    data = get_data(str(zipcode))\n",
+							"    j=json.dumps(data) \n",
+							"    with open(pathbronze+\"/CrimeData/crimedata-zipcode-\"+ str(zipcode)+ \".json\",\"w\") as f:\n",
+							"         f.write(j)\n",
+							"         f.close()\n",
+							"    # delay the request to limit 30 per minute \n",
+							"    if (counter%30)==0:\n",
+							"        time.sleep(60)\n",
+							"        print(\"delay \"+str(datetime.datetime.now()))"
+						],
+						"outputs": [],
+						"execution_count": 8
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Collecting Property Comparison')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "RealEstate",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"runAsWorkspaceSystemIdentity": false,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "cbb30b64-9225-4630-8dd7-15fae2410623"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"synapse_widget": {
+						"version": "0.1"
+					},
+					"enableDebugMode": false,
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/53a5f707-d87c-4719-a352-95e693ea64db/resourceGroups/resource-group-realestate-project/providers/Microsoft.Synapse/workspaces/synapserealestate/bigDataPools/RealEstate",
+						"name": "RealEstate",
+						"type": "Spark",
+						"endpoint": "https://synapserealestate.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/RealEstate",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net",
+							"authHeader": null
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"extraHeader": null
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Collecting Property Comparison Data\n",
+							"The purpose of this code is to collect property comparison data from API and store them in Azure Datalake in JSON format"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							}
+						},
+						"source": [
+							"import requests\n",
+							"import pandas as pd\n",
+							"import json\n",
+							"import time\n",
+							"import datetime\n",
+							"import os"
+						],
+						"outputs": [],
+						"execution_count": 2
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"def get_data(ZPID : str):\n",
+							"    url = \"https://zillow-com1.p.rapidapi.com/similarSales\"\n",
+							"    querystring = {\"zpid\":ZPID}\n",
+							"    headers = {\n",
+							"\t    \"x-rapidapi-key\": \"1bd9f55d72msh06a4a0fa1818ebep126179jsnf1ca25048267\",\n",
+							"\t    \"x-rapidapi-host\": \"zillow-com1.p.rapidapi.com\"\n",
+							"    }\n",
+							"    response = requests.get(url, headers=headers, params=querystring)\n",
+							"    return(response.json())"
+						],
+						"outputs": [],
+						"execution_count": 3
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"from notebookutils import mssparkutils \n",
+							"\n",
+							"mssparkutils.fs.mount( \n",
+							"    \"abfss://silver@dlakerealestate.dfs.core.windows.net\", \n",
+							"    \"/silver\", \n",
+							"    {\"linkedService\": \"AzureDataLakeStorage1\"} \n",
+							") \n",
+							"pathsilver = mssparkutils.fs.getMountPath(\"/silver\")"
+						],
+						"outputs": [],
+						"execution_count": 4
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"mssparkutils.fs.mount(\n",
+							"    \"abfss://bronze@dlakerealestate.dfs.core.windows.net\", \n",
+							"    \"/bronze/PropertyComparison\", \n",
+							"    {\"linkedService\": \"AzureDataLakeStorage1\"} \n",
+							") \n",
+							"pathbronze = mssparkutils.fs.getMountPath(\"/bronze/PropertyComparison\")"
+						],
+						"outputs": [],
+						"execution_count": 12
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"directory_path=pathbronze+\"/PropertyComparison\"\n",
+							"files = os.listdir(directory_path)\n",
+							"for file in files:\n",
+							"    file_path = os.path.join(directory_path, file)\n",
+							"    # print(file_path)\n",
+							"    if os.path.isfile(file_path):\n",
+							"         os.remove(file_path)"
+						],
+						"outputs": []
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"dfpropertyonmarket = pd.read_parquet(pathsilver+'/PropertyOnMarket/', engine='pyarrow').drop_duplicates(['ZPID'])"
+						],
+						"outputs": [],
+						"execution_count": 6
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"counter =0\n",
+							"for index, row in dfpropertyonmarket.iterrows():\n",
+							"    counter=counter+1\n",
+							"    if(counter>=0 ):\n",
+							"        data = get_data(row['ZPID'])\n",
+							"        j=json.dumps(data) \n",
+							"        with open(pathbronze+\"/PropertyComparison/comp-zpid-\"+ str(row['ZPID'])+ \".json\",\"w\") as f:\n",
+							"            f.write(j)\n",
+							"            f.close()\n",
+							"        # delay the request to limit 2 per second\n",
+							"        if (counter%1)==0:\n",
+							"            print(counter, \"delay \"+str(datetime.datetime.now()))\n",
+							"            time.sleep(0.8)"
+						],
+						"outputs": [],
+						"execution_count": 14
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Collecting PropertyOnSale Data')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "RealEstate",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 4,
+					"runAsWorkspaceSystemIdentity": false,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "4",
+						"spark.dynamicAllocation.maxExecutors": "4",
+						"spark.autotune.trackingId": "4948d52f-907b-485d-80ab-0ef574a74543"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "python"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/53a5f707-d87c-4719-a352-95e693ea64db/resourceGroups/resource-group-realestate-project/providers/Microsoft.Synapse/workspaces/synapserealestate/bigDataPools/RealEstate",
+						"name": "RealEstate",
+						"type": "Spark",
+						"endpoint": "https://synapserealestate.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/RealEstate",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"automaticScaleJobs": false
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Collecting Property On Market Data\n",
+							"This code purpose is to collect property raw data on market and store it in json files"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"import requests\n",
+							"import pandas as pd\n",
+							"import json\n",
+							"import time\n",
+							"import datetime\n",
+							"import os"
+						],
+						"outputs": [],
+						"execution_count": 1
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Function to get data"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language_group": "synapse_pyspark"
+							}
+						},
+						"source": [
+							"\n",
+							"\n",
+							"def get_data(page : str, minprice : str, maxprice : str, statustype :str):\n",
+							"\turl = \"https://zillow-com1.p.rapidapi.com/propertyExtendedSearch\"\n",
+							"\tquerystring = {\"location\":\"Monroeville, PA;Pittsburgh, PA;Saint Marys County, MD\",\"home_type\":\"Houses,Townhomes,Multi-family\",\"page\": page,\"status_type\":statustype,\"daysOn\":\"90\",\"soldInLast\":\"1\",\"minPrice\":minprice,\"maxPrice\":maxprice}\n",
+							"\theaders = {\n",
+							"\t\t\"x-rapidapi-key\": \"1bd9f55d72msh06a4a0fa1818ebep126179jsnf1ca25048267\",\n",
+							"\t\t\"x-rapidapi-host\": \"zillow-com1.p.rapidapi.com\"\n",
+							"\t}\n",
+							"\tresponse = requests.get(url, headers=headers, params=querystring)\n",
+							"\treturn response.json()\n",
+							""
+						],
+						"outputs": [],
+						"execution_count": 3
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Define price boundary"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"boundary = [\n",
+							"    {'minprice': '0', 'maxprice': '50000'},\n",
+							"    {'minprice': '50001', 'maxprice': '100000'},\n",
+							"    {'minprice': '100001', 'maxprice': '150000'},\n",
+							"    {'minprice': '150001', 'maxprice': '200000'},\n",
+							"    {'minprice': '200001', 'maxprice': '225000'},\n",
+							"    {'minprice': '225001', 'maxprice': '250000'},\n",
+							"    {'minprice': '250001', 'maxprice': '275000'},\n",
+							"    {'minprice': '275001', 'maxprice': '300000'}\n",
+							"]"
+						],
+						"outputs": [],
+						"execution_count": 4
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from notebookutils import mssparkutils \n",
+							"\n",
+							"mssparkutils.fs.mount( \n",
+							"    \"abfss://bronze@dlakerealestate.dfs.core.windows.net\", \n",
+							"    \"/bronze\", \n",
+							"    {\"linkedService\": \"AzureDataLakeStorage1\"} \n",
+							") \n",
+							"path = mssparkutils.fs.getMountPath(\"/bronze\")\n",
+							""
+						],
+						"outputs": [],
+						"execution_count": 5
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Get the data and store in json for each boundary "
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"\n",
+							"\n",
+							"iter_index=0\n",
+							"boundary_index=0\n",
+							"for c in boundary:\n",
+							"    boundary_index=boundary_index+1\n",
+							"    data = get_data(1,c['minprice'],c['maxprice'],\"ForSale\")\n",
+							"    num_of_pages=data[\"totalPages\"]\n",
+							"    #get the data and store in json for each boundary \n",
+							"    for i in range(num_of_pages):\n",
+							"        iter_index=iter_index+1\n",
+							"        counter=i+1\n",
+							"        data = get_data(counter,c['minprice'],c['maxprice'],\"ForSale\")\n",
+							"        j=json.dumps(data) \n",
+							"        with open(path+\"/PropertyOnMarket/property-onmarket-minprice\"+ str(c['minprice']) + \"-\" +str(\"ForSale\")+ \"-page-\" + str(counter)  +\".json\",\"w\") as f:\n",
+							"            f.write(j)\n",
+							"            f.close()\n",
+							"        print(\"i : \"+str(i+1)+\" boundary_index :\" +str(boundary_index)+ \" iter_index :\" +str(iter_index)+\" \"+c['minprice']+\" \"+c['maxprice'])\n",
+							"        #delay the request to limit 10 per minute \n",
+							"        if (iter_index%5)==0:\n",
+							"            time.sleep(60)\n",
+							"            print(\"delay \"+str(datetime.datetime.now()))\n",
+							"    "
+						],
+						"outputs": [],
+						"execution_count": 6
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Collecting Rent Estimation Data')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "RealEstate",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"runAsWorkspaceSystemIdentity": false,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "b2d2871a-c982-4d8a-942d-77b503bac1e7"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "python"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/53a5f707-d87c-4719-a352-95e693ea64db/resourceGroups/resource-group-realestate-project/providers/Microsoft.Synapse/workspaces/synapserealestate/bigDataPools/RealEstate",
+						"name": "RealEstate",
+						"type": "Spark",
+						"endpoint": "https://synapserealestate.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/RealEstate",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"automaticScaleJobs": false
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Collecting Rent Estimation Data\n",
+							"The code is to collect rent estimation data from API and store in Azure Datalake in JSON format"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							}
+						},
+						"source": [
+							"import requests\n",
+							"import pandas as pd\n",
+							"import json\n",
+							"import time\n",
+							"import datetime\n",
+							"import os"
+						],
+						"outputs": [],
+						"execution_count": 1
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"def get_data(Address : str,PropertyType : str, Bed : str):\n",
+							"    url = \"https://zillow-com1.p.rapidapi.com/rentEstimate\"\n",
+							"    if len(Bed)>0:\n",
+							"        querystring = {\"address\":Address,\"d\":\"0.5\",\"propertyType\":PropertyType,\"beds\":Bed,\"includeComps\":\"true\"}\n",
+							"        # querystring = {\"address\":Address,\"d\":\"0.5\",\"beds\":Bed,\"includeComps\":\"true\"}\n",
+							"    else:\n",
+							"        querystring = {\"address\":Address,\"d\":\"0.5\",\"propertyType\":PropertyType,\"includeComps\":\"true\"}\n",
+							"        # querystring = {\"address\":Address,\"d\":\"0.5\",\"includeComps\":\"true\"}\n",
+							"\n",
+							"    headers = {\n",
+							"\t    \"x-rapidapi-key\": \"1bd9f55d72msh06a4a0fa1818ebep126179jsnf1ca25048267\",\n",
+							"\t    \"x-rapidapi-host\": \"zillow-com1.p.rapidapi.com\"\n",
+							"    }\n",
+							"    response = requests.get(url, headers=headers, params=querystring)\n",
+							"    return response.json()"
+						],
+						"outputs": [],
+						"execution_count": 2
+					},
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"from notebookutils import mssparkutils \n",
+							"\n",
+							"mssparkutils.fs.mount( \n",
+							"    \"abfss://silver@dlakerealestate.dfs.core.windows.net\", \n",
+							"    \"/silver\", \n",
+							"    {\"linkedService\": \"AzureDataLakeStorage1\"} \n",
+							") \n",
+							"pathsilver = mssparkutils.fs.getMountPath(\"/silver\")"
+						],
+						"outputs": [],
+						"execution_count": 3
+					},
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"mssparkutils.fs.mount(\n",
+							"    \"abfss://bronze@dlakerealestate.dfs.core.windows.net\", \n",
+							"    \"/bronze/RentalEstimateData/\", \n",
+							"    {\"linkedService\": \"AzureDataLakeStorage1\"} \n",
+							") \n",
+							"pathbronze = mssparkutils.fs.getMountPath(\"/bronze/RentalEstimateData\")"
+						],
+						"outputs": [],
+						"execution_count": 4
+					},
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"directory_path=pathbronze+\"/RentalEstimateData\"\n",
+							"files = os.listdir(directory_path)\n",
+							"for file in files:\n",
+							"    file_path = os.path.join(directory_path, file)\n",
+							"    # print(file_path)\n",
+							"    if os.path.isfile(file_path):\n",
+							"         os.remove(file_path)"
+						],
+						"outputs": [],
+						"execution_count": 10
+					},
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"dfpropertyonmarket = pd.read_parquet(pathsilver+'/PropertyOnMarket/', engine='pyarrow').drop_duplicates(['ZPID'])"
+						],
+						"outputs": [],
+						"execution_count": 5
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"collapsed": false
+						},
+						"source": [
+							"display(dfpropertyonmarket)\n",
+							""
+						],
+						"outputs": [],
+						"execution_count": 6
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python",
+								"language_group": "synapse_pyspark"
+							},
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"counter =0\n",
+							"for index, row in dfpropertyonmarket.iterrows():\n",
+							"     \n",
+							"    counter=counter+1\n",
+							"    \n",
+							"    if(len(str(row['Address']))>0 and counter>=0 ):\n",
+							"        propertyType=\"\"\n",
+							"        if row[\"PropertyType\"]==\"SINGLE_FAMILY\":\n",
+							"            propertyType=\"SingleFamily\"\n",
+							"        elif row[\"PropertyType\"]==\"MULTI_FAMILY\":\n",
+							"            propertyType=\"MultiFamily\"\n",
+							"        elif row[\"PropertyType\"]==\"TOWNHOUSE\":\n",
+							"            propertyType=\"Townhouse\"\n",
+							"        print(counter,str(row['Address']),propertyType,str(row['Bedrooms']))\n",
+							"        \n",
+							"        data = get_data(row['Address'],propertyType,str(row['Bedrooms']))\n",
+							"        j=json.dumps(data) \n",
+							"        with open(pathbronze+\"/RentalEstimateData/rentalestimate-address-\"+ str(row['Address']).replace(\" \",\"\").replace(\",\",\"\")+ \".json\",\"w\") as f:\n",
+							"            f.write(j)\n",
+							"            f.close()\n",
+							"        # delay the request to limit 2 per second\n",
+							"        if (counter%1)==0:\n",
+							"            print(\"delay \"+str(datetime.datetime.now()))\n",
+							"            time.sleep(0.8)\n",
+							"            \n",
+							"   \n",
+							"    "
+						],
+						"outputs": [],
+						"execution_count": 8
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Mount')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "RealEstate",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"runAsWorkspaceSystemIdentity": false,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "79e41e9c-8857-4f70-b4ac-c5f4d1dc5ed2"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"synapse_widget": {
+						"version": "0.1"
+					},
+					"enableDebugMode": false,
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/53a5f707-d87c-4719-a352-95e693ea64db/resourceGroups/resource-group-realestate-project/providers/Microsoft.Synapse/workspaces/synapserealestate/bigDataPools/RealEstate",
+						"name": "RealEstate",
+						"type": "Spark",
+						"endpoint": "https://synapserealestate.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/RealEstate",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net",
+							"authHeader": null
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"extraHeader": null
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from notebookutils import mssparkutils \r\n",
+							"mssparkutils.fs.mount( \r\n",
+							"    \"abfss://bronze@dlakerealestate.dfs.core.windows.net\", \r\n",
+							"    \"/bronze\", \r\n",
+							"    {\"linkedService\": \"AzureDataLakeStorage1\"} \r\n",
+							") "
+						],
+						"outputs": [],
+						"execution_count": 1
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# my_class.py\r\n",
+							"\r\n",
+							"class Mount:\r\n",
+							"    def __init__(self, name):\r\n",
+							"        self.name = name\r\n",
+							"\r\n",
+							"    def GetBronzePath(self):\r\n",
+							"        return mssparkutils.fs.getMountPath(\"/bronze\")"
+						],
+						"outputs": [],
+						"execution_count": 3
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/RealEstate')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"autoPause": {
+					"enabled": true,
+					"delayInMinutes": 15
+				},
+				"autoScale": {
+					"enabled": true,
+					"maxNodeCount": 10,
+					"minNodeCount": 3
+				},
+				"nodeCount": 10,
+				"nodeSize": "Small",
+				"nodeSizeFamily": "MemoryOptimized",
+				"sparkVersion": "3.4",
+				"isComputeIsolationEnabled": false,
+				"sessionLevelPackagesEnabled": false,
+				"annotations": []
+			},
+			"dependsOn": [],
+			"location": "eastus2"
+		}
+	]
+}
