@@ -1,0 +1,271 @@
+{
+	"name": "Collecting PropertyOnSale Data",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "RealEstate",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 4,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "4",
+				"spark.dynamicAllocation.maxExecutors": "4",
+				"spark.autotune.trackingId": "87983525-d6ac-4be4-92fa-6eb858c0b04b"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/53a5f707-d87c-4719-a352-95e693ea64db/resourceGroups/resource-group-realestate-project/providers/Microsoft.Synapse/workspaces/synapserealestate/bigDataPools/RealEstate",
+				"name": "RealEstate",
+				"type": "Spark",
+				"endpoint": "https://synapserealestate.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/RealEstate",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.4",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"microsoft": {
+						"language": "python",
+						"language_group": "synapse_pyspark"
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Collecting Property On Market Data\n",
+					"This code purpose is to collect property raw data on market and store it in json files"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language_group": "synapse_pyspark"
+					},
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"import requests\n",
+					"import pandas as pd\n",
+					"import json\n",
+					"import time\n",
+					"import datetime\n",
+					"import os"
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"microsoft": {
+						"language": "python",
+						"language_group": "synapse_pyspark"
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Function to get data"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language_group": "synapse_pyspark"
+					}
+				},
+				"source": [
+					"\n",
+					"\n",
+					"def get_data(page : str, minprice : str, maxprice : str, statustype :str):\n",
+					"\turl = \"https://zillow-com1.p.rapidapi.com/propertyExtendedSearch\"\n",
+					"\tquerystring = {\"location\":\"Monroeville, PA;Pittsburgh, PA;Saint Marys County, MD\",\"home_type\":\"Houses,Townhomes,Multi-family\",\"page\": page,\"status_type\":statustype,\"daysOn\":\"90\",\"soldInLast\":\"1\",\"minPrice\":minprice,\"maxPrice\":maxprice}\n",
+					"\theaders = {\n",
+					"\t\t\"x-rapidapi-key\": \"1bd9f55d72msh06a4a0fa1818ebep126179jsnf1ca25048267\",\n",
+					"\t\t\"x-rapidapi-host\": \"zillow-com1.p.rapidapi.com\"\n",
+					"\t}\n",
+					"\tresponse = requests.get(url, headers=headers, params=querystring)\n",
+					"\treturn response.json()\n",
+					""
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"microsoft": {
+						"language": "python",
+						"language_group": "synapse_pyspark"
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Define price boundary"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language_group": "synapse_pyspark"
+					},
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"boundary = [\n",
+					"    {'minprice': '0', 'maxprice': '50000'},\n",
+					"    {'minprice': '50001', 'maxprice': '100000'},\n",
+					"    {'minprice': '100001', 'maxprice': '150000'},\n",
+					"    {'minprice': '150001', 'maxprice': '200000'},\n",
+					"    {'minprice': '200001', 'maxprice': '225000'},\n",
+					"    {'minprice': '225001', 'maxprice': '250000'},\n",
+					"    {'minprice': '250001', 'maxprice': '275000'},\n",
+					"    {'minprice': '275001', 'maxprice': '300000'}\n",
+					"]"
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from notebookutils import mssparkutils \n",
+					"\n",
+					"mssparkutils.fs.mount( \n",
+					"    \"abfss://bronze@dlakerealestate.dfs.core.windows.net\", \n",
+					"    \"/bronze\", \n",
+					"    {\"linkedService\": \"AzureDataLakeStorage1\"} \n",
+					") \n",
+					"path = mssparkutils.fs.getMountPath(\"/bronze\")\n",
+					""
+				],
+				"execution_count": 5
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"microsoft": {
+						"language": "python",
+						"language_group": "synapse_pyspark"
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Get the data and store in json for each boundary "
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language_group": "synapse_pyspark"
+					},
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"\n",
+					"\n",
+					"iter_index=0\n",
+					"boundary_index=0\n",
+					"for c in boundary:\n",
+					"    boundary_index=boundary_index+1\n",
+					"    data = get_data(1,c['minprice'],c['maxprice'],\"ForSale\")\n",
+					"    num_of_pages=data[\"totalPages\"]\n",
+					"    #get the data and store in json for each boundary \n",
+					"    for i in range(num_of_pages):\n",
+					"        iter_index=iter_index+1\n",
+					"        counter=i+1\n",
+					"        data = get_data(counter,c['minprice'],c['maxprice'],\"ForSale\")\n",
+					"        j=json.dumps(data) \n",
+					"        with open(path+\"/PropertyOnMarket/property-onmarket-minprice\"+ str(c['minprice']) + \"-\" +str(\"ForSale\")+ \"-page-\" + str(counter)  +\".json\",\"w\") as f:\n",
+					"            f.write(j)\n",
+					"            f.close()\n",
+					"        print(\"i : \"+str(i+1)+\" boundary_index :\" +str(boundary_index)+ \" iter_index :\" +str(iter_index)+\" \"+c['minprice']+\" \"+c['maxprice'])\n",
+					"        #delay the request to limit 10 per minute \n",
+					"        if (iter_index%5)==0:\n",
+					"            time.sleep(60)\n",
+					"            print(\"delay \"+str(datetime.datetime.now()))\n",
+					"    "
+				],
+				"execution_count": 6
+			}
+		]
+	}
+}

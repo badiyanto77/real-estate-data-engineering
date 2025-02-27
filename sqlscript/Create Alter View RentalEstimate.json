@@ -1,0 +1,17 @@
+{
+	"name": "Create Alter View RentalEstimate",
+	"properties": {
+		"content": {
+			"query": "CREATE OR ALTER VIEW RentalEstimate\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'https://dlakerealestate.dfs.core.windows.net/silver/RentalEstimateData/RentalEstimate.delta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "RealEstateAnalytic",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,211 @@
+{
+	"name": "Collecting Property Comparison",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "RealEstate",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "cbb30b64-9225-4630-8dd7-15fae2410623"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/53a5f707-d87c-4719-a352-95e693ea64db/resourceGroups/resource-group-realestate-project/providers/Microsoft.Synapse/workspaces/synapserealestate/bigDataPools/RealEstate",
+				"name": "RealEstate",
+				"type": "Spark",
+				"endpoint": "https://synapserealestate.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/RealEstate",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.4",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Collecting Property Comparison Data\n",
+					"The purpose of this code is to collect property comparison data from API and store them in Azure Datalake in JSON format"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "python",
+						"language_group": "synapse_pyspark"
+					}
+				},
+				"source": [
+					"import requests\n",
+					"import pandas as pd\n",
+					"import json\n",
+					"import time\n",
+					"import datetime\n",
+					"import os"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "python",
+						"language_group": "synapse_pyspark"
+					},
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def get_data(ZPID : str):\n",
+					"    url = \"https://zillow-com1.p.rapidapi.com/similarSales\"\n",
+					"    querystring = {\"zpid\":ZPID}\n",
+					"    headers = {\n",
+					"\t    \"x-rapidapi-key\": \"1bd9f55d72msh06a4a0fa1818ebep126179jsnf1ca25048267\",\n",
+					"\t    \"x-rapidapi-host\": \"zillow-com1.p.rapidapi.com\"\n",
+					"    }\n",
+					"    response = requests.get(url, headers=headers, params=querystring)\n",
+					"    return(response.json())"
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"from notebookutils import mssparkutils \n",
+					"\n",
+					"mssparkutils.fs.mount( \n",
+					"    \"abfss://silver@dlakerealestate.dfs.core.windows.net\", \n",
+					"    \"/silver\", \n",
+					"    {\"linkedService\": \"AzureDataLakeStorage1\"} \n",
+					") \n",
+					"pathsilver = mssparkutils.fs.getMountPath(\"/silver\")"
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"mssparkutils.fs.mount(\n",
+					"    \"abfss://bronze@dlakerealestate.dfs.core.windows.net\", \n",
+					"    \"/bronze/PropertyComparison\", \n",
+					"    {\"linkedService\": \"AzureDataLakeStorage1\"} \n",
+					") \n",
+					"pathbronze = mssparkutils.fs.getMountPath(\"/bronze/PropertyComparison\")"
+				],
+				"execution_count": 12
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"directory_path=pathbronze+\"/PropertyComparison\"\n",
+					"files = os.listdir(directory_path)\n",
+					"for file in files:\n",
+					"    file_path = os.path.join(directory_path, file)\n",
+					"    # print(file_path)\n",
+					"    if os.path.isfile(file_path):\n",
+					"         os.remove(file_path)"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "python",
+						"language_group": "synapse_pyspark"
+					},
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"dfpropertyonmarket = pd.read_parquet(pathsilver+'/PropertyOnMarket/', engine='pyarrow').drop_duplicates(['ZPID'])"
+				],
+				"execution_count": 6
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "python",
+						"language_group": "synapse_pyspark"
+					},
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"counter =0\n",
+					"for index, row in dfpropertyonmarket.iterrows():\n",
+					"    counter=counter+1\n",
+					"    if(counter>=0 ):\n",
+					"        data = get_data(row['ZPID'])\n",
+					"        j=json.dumps(data) \n",
+					"        with open(pathbronze+\"/PropertyComparison/comp-zpid-\"+ str(row['ZPID'])+ \".json\",\"w\") as f:\n",
+					"            f.write(j)\n",
+					"            f.close()\n",
+					"        # delay the request to limit 2 per second\n",
+					"        if (counter%1)==0:\n",
+					"            print(counter, \"delay \"+str(datetime.datetime.now()))\n",
+					"            time.sleep(0.8)"
+				],
+				"execution_count": 14
+			}
+		]
+	}
+}
