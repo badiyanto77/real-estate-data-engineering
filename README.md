@@ -1,15 +1,10 @@
 
-# Title Of Your Project
-Add a catchy title to your project. Something that people immediately know what you are doing
+# Real Estate Analytic End to End Project
+This project is about to capitalize real estate data for assisting investor to obtain optimal investment decision 
 
 # Introduction & Goals
-- Introduce your project to the reader
-- Orient this section on the Table of contents
-- Write this like an executive summary
-  - With what data are you working
-  - What tools are you using
-  - What are you doing with these tools
-  - Once you are finished add the conclusion here as well
+The end of product of this project is the complete real estate analytic tool, from data ingestion until data visualization.
+The project demonstrates the process from data collection, data cleaning, data transformation, and data visualization. The project is developed using Azure data engineering platform, and utilize Power BI as tool to develop data visualization.
 
 # Contents
 
