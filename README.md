@@ -5,6 +5,7 @@ This project is about to capitalize real estate data for assisting investor to o
 # Introduction & Goals
 The end of product of this project is the complete real estate analytic tool, from data ingestion until data visualization.
 The project demonstrates the process from data collection, data cleaning, data transformation, and data visualization. The project is developed using Azure data engineering platform, and utilize Power BI as tool to develop data visualization.
+![Screenshot 2025-01-28 194000](https://github.com/user-attachments/assets/eb8f61ea-7aba-4270-8714-00a3fdb3e6b0)
 
 # Contents
 
