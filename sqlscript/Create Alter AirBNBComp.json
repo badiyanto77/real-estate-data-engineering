@@ -1,0 +1,17 @@
+{
+	"name": "Create Alter AirBNBComp",
+	"properties": {
+		"content": {
+			"query": "-- This is auto-generated code\nCREATE OR ALTER VIEW AirBNBComp\nAS\nSELECT\n    *\nFROM\n    OPENROWSET(\n        BULK 'https://dlakerealestate.dfs.core.windows.net/silver/AirBNBData/AirBNBComp.delta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "RealEstateAnalytic",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
