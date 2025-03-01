@@ -29,14 +29,17 @@ The data sources taken from Zillow, AirDNA, Rental, Crime Data API. Zillow and A
 - Datalake Gen2 is used to store raw data and transformed data
 
 # Pipelines
-- Explain the pipelines for processing that you are building
-- Go through your development and add your source code
+The pipeline design is divided into 3 phases :
+- Phase 1 : Collecting and transforming property on market data as a base for next data collection and transformation
+- Phase 2 : Collecting crime, rental, AirBNB data based on targeted market area
+- Phase 3 : Transforming crime, rental, AirBNB data into ready use format
 
 # Visualization
 Power BI is used as data visualization tool, due to the easy connectivity with azure platform. 
 ![Screenshot 2025-03-01 094921](https://github.com/user-attachments/assets/7c18e0b2-5392-4fa1-83d0-7a9e97e9aa0d)
 
 # Batch Processing
+The batch processing is scheduled every week to obtain significant amount of data change based on targeted market analysis
 
 # Transformed Data Model
 ![Screenshot 2025-03-01 115329](https://github.com/user-attachments/assets/816cb36f-9996-4b78-93a2-bf8e2e66f76c)
