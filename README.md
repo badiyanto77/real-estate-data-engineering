@@ -1,11 +1,13 @@
 
 # Real Estate Analytic End to End Project
-This project is about to capitalize real estate data for assisting investor to obtain optimal investment decision 
+This project is about to capitalize real estate data for 
+assisting investor to obtain optimal investment decision 
 
 # Introduction & Goals
 The end of product of this project is the complete real estate analytic tool, from data ingestion until data visualization.
 The project demonstrates the process from data collection, data cleaning, data transformation, and data visualization. The project is developed using Azure data engineering platform, and utilize Power BI as tool to develop data visualization.
-![Screenshot 2025-01-28 194000](https://github.com/user-attachments/assets/eb8f61ea-7aba-4270-8714-00a3fdb3e6b0)
+
+
 
 # Contents
 
@@ -27,25 +29,21 @@ The project demonstrates the process from data collection, data cleaning, data t
 - [Follow Me On](#follow-me-on)
 - [Appendix](#appendix)
 
+# Architecture Diagram
+![Screenshot 2025-03-01 092940](https://github.com/user-attachments/assets/5986041c-3981-477a-bc42-af29cf3a8b63)
 
 # The Data Set
-- Explain the data set
-- Why did you choose it?
-- What do you like about it?
-- What is problematic?
-- What do you want to do with it?
+The data sources taken from Zillow, AirDNA, Rental, Crime Data API. Zillow and AirDNA have been the popular platforms used to analyze real estate market both for long term and short term rental market.  
 
 # Used Tools
-- Explain which tools do you use and why
-- How do they work (don't go too deep into details, but add links)
-- Why did you choose them
-- How did you set them up
+- Synapse Data Analytics is used to orchestrate the entire pipeline, and also write python script to collect the data
+- Databrick is used in data extraction and transformation process
+- Datalake Gen2 is used to store raw data and transformed data
 
-## Connect
-## Buffer
-## Processing
-## Storage
-## Visualization
+# Visualization
+Power BI is used as data visualization tool, due to the easy connectivity with azure platform. 
+![Screenshot 2025-03-01 094921](https://github.com/user-attachments/assets/7c18e0b2-5392-4fa1-83d0-7a9e97e9aa0d)
+
 
 # Pipelines
 - Explain the pipelines for processing that you are building
@@ -70,6 +68,3 @@ Write a comprehensive conclusion.
 # Follow Me On
 Add the link to your LinkedIn Profile
 
-# Appendix
-
-[Markdown Cheat Sheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
