@@ -13,7 +13,6 @@ The project demonstrates the process from data collection, data cleaning, data t
 - [Used Tools](#used-tools)
 - [Pipelines](#pipelines)
 - [Visualizations](#visualizations)
-- [Demo](#demo)
 - [Conclusion](#conclusion)
 - [Follow Me On](#follow-me-on)
 
@@ -29,16 +28,18 @@ The data sources taken from Zillow, AirDNA, Rental, Crime Data API. Zillow and A
 - Databrick is used in data extraction and transformation process
 - Datalake Gen2 is used to store raw data and transformed data
 
-# Visualization
-Power BI is used as data visualization tool, due to the easy connectivity with azure platform. 
-![Screenshot 2025-03-01 094921](https://github.com/user-attachments/assets/7c18e0b2-5392-4fa1-83d0-7a9e97e9aa0d)
-
-
 # Pipelines
 - Explain the pipelines for processing that you are building
 - Go through your development and add your source code
 
+# Visualization
+Power BI is used as data visualization tool, due to the easy connectivity with azure platform. 
+![Screenshot 2025-03-01 094921](https://github.com/user-attachments/assets/7c18e0b2-5392-4fa1-83d0-7a9e97e9aa0d)
+
 # Batch Processing
+
+# Transformed Data Model
+![Screenshot 2025-03-01 115329](https://github.com/user-attachments/assets/816cb36f-9996-4b78-93a2-bf8e2e66f76c)
 
 # Demo
 - You could add a demo video here
