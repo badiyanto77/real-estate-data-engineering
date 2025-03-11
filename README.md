@@ -18,7 +18,8 @@ The project demonstrates the process from data collection, data cleaning, data t
 
 
 # The Architecture Diagram
-![Screenshot 2025-03-01 092940](https://github.com/user-attachments/assets/5986041c-3981-477a-bc42-af29cf3a8b63)
+
+![Screenshot 2025-03-11 114437](https://github.com/user-attachments/assets/41332464-9fc7-44d2-9507-9c131bc55f69)
 
 ## The Data Set
 The data sources taken from Zillow, AirDNA, Rental, Crime Data API. Zillow and AirDNA have been the popular platforms used to analyze real estate market both for long term and short term rental market.  
