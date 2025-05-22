@@ -11,8 +11,7 @@
 					"referenceName": "AzureKeyVault1",
 					"type": "LinkedServiceReference"
 				},
-				"secretName": "synapsedatabricktoken",
-				"secretVersion": "0c488bdcd9d34cc19d4206ec8f943b5e"
+				"secretName": "synapsedatabricktoken"
 			},
 			"existingClusterId": "0522-002116-fvvjjrx0"
 		},
