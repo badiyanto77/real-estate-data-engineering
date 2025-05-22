@@ -1,6 +1,5 @@
 {
 	"name": "AzureDatabricks1",
-	"type": "Microsoft.Synapse/workspaces/linkedservices",
 	"properties": {
 		"annotations": [],
 		"type": "AzureDatabricks",
@@ -14,11 +13,12 @@
 				},
 				"secretName": "synapsedatabricktoken"
 			},
-			"existingClusterId": "0206-222100-fx4uvh6r"
+			"existingClusterId": "0522-002116-fvvjjrx0"
 		},
 		"connectVia": {
 			"referenceName": "AutoResolveIntegrationRuntime",
 			"type": "IntegrationRuntimeReference"
 		}
-	}
+	},
+	"type": "Microsoft.Synapse/workspaces/linkedservices"
 }
