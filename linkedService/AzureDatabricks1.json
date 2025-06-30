@@ -13,7 +13,7 @@
 				},
 				"secretName": "synapsedatabricktoken"
 			},
-			"existingClusterId": "0522-002116-fvvjjrx0"
+			"existingClusterId": "0630-203323-9ahkw8ao"
 		},
 		"connectVia": {
 			"referenceName": "AutoResolveIntegrationRuntime",
