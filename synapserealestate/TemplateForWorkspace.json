@@ -38,7 +38,14 @@
 					{
 						"name": "Collecting Property Comparison Data",
 						"type": "SynapseNotebook",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "Collecting Crime Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -70,7 +77,14 @@
 					{
 						"name": "Collecting Crime Data",
 						"type": "SynapseNotebook",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "Transforming PropertyOnMarket Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -134,7 +148,14 @@
 					{
 						"name": "Transforming PropertyOnMarket Data",
 						"type": "DatabricksNotebook",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "Collecting Property On Sale",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -154,7 +175,14 @@
 					{
 						"name": "Collecting AirBNB Data",
 						"type": "SynapseNotebook",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "Collecting Property Comparison Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -186,7 +214,14 @@
 					{
 						"name": "Collecting Rent Estimation Data",
 						"type": "SynapseNotebook",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "Collecting AirBNB Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -214,23 +249,6 @@
 							"driverSize": "Small",
 							"numExecutors": 2
 						}
-					},
-					{
-						"name": "Execute Transforming Data Pipeline",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "Transform Data Pipeline",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
 					}
 				],
 				"policy": {
@@ -246,8 +264,7 @@
 				"[concat(variables('workspaceId'), '/notebooks/Collecting PropertyOnSale Data')]",
 				"[concat(variables('workspaceId'), '/linkedServices/AzureDatabricks1')]",
 				"[concat(variables('workspaceId'), '/notebooks/Collecting AirBNB Data')]",
-				"[concat(variables('workspaceId'), '/notebooks/Collecting Rent Estimation Data')]",
-				"[concat(variables('workspaceId'), '/pipelines/Transform Data Pipeline')]"
+				"[concat(variables('workspaceId'), '/notebooks/Collecting Rent Estimation Data')]"
 			]
 		},
 		{
@@ -404,7 +421,7 @@
 						},
 						"secretName": "synapsedatabricktoken"
 					},
-					"existingClusterId": "0522-002116-fvvjjrx0"
+					"existingClusterId": "0630-203323-9ahkw8ao"
 				},
 				"connectVia": {
 					"referenceName": "AutoResolveIntegrationRuntime",
