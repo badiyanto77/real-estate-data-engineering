@@ -37,7 +37,14 @@
 			{
 				"name": "Collecting Crime Data",
 				"type": "SynapseNotebook",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Transforming PropertyOnMarket Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -69,7 +76,14 @@
 			{
 				"name": "Collecting Property On Sale",
 				"type": "SynapseNotebook",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Collecting Crime Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -101,7 +115,14 @@
 			{
 				"name": "Transforming PropertyOnMarket Data",
 				"type": "DatabricksNotebook",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Collecting Property Comparison Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -121,7 +142,14 @@
 			{
 				"name": "Collecting AirBNB Data",
 				"type": "SynapseNotebook",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Collecting Property On Sale",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -153,7 +181,14 @@
 			{
 				"name": "Collecting Rent Estimation Data",
 				"type": "SynapseNotebook",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Collecting AirBNB Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -180,22 +215,6 @@
 					},
 					"driverSize": "Small",
 					"numExecutors": 2
-				}
-			},
-			{
-				"name": "Execute Transforming Data Pipeline",
-				"type": "ExecutePipeline",
-				"dependsOn": [],
-				"policy": {
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "Transform Data Pipeline",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
 				}
 			}
 		],
