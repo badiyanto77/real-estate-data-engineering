@@ -5,14 +5,7 @@
 			{
 				"name": "Collecting Property Comparison Data",
 				"type": "SynapseNotebook",
-				"dependsOn": [
-					{
-						"activity": "Transforming PropertyOnMarket Data",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -44,14 +37,7 @@
 			{
 				"name": "Collecting Crime Data",
 				"type": "SynapseNotebook",
-				"dependsOn": [
-					{
-						"activity": "Transforming PropertyOnMarket Data",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -142,14 +128,7 @@
 			{
 				"name": "Collecting AirBNB Data",
 				"type": "SynapseNotebook",
-				"dependsOn": [
-					{
-						"activity": "Transforming PropertyOnMarket Data",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -181,14 +160,7 @@
 			{
 				"name": "Collecting Rent Estimation Data",
 				"type": "SynapseNotebook",
-				"dependsOn": [
-					{
-						"activity": "Transforming PropertyOnMarket Data",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -220,32 +192,7 @@
 			{
 				"name": "Execute Transforming Data Pipeline",
 				"type": "ExecutePipeline",
-				"dependsOn": [
-					{
-						"activity": "Collecting Rent Estimation Data",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "Collecting Crime Data",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "Collecting Property Comparison Data",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "Collecting AirBNB Data",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"secureInput": false
 				},
